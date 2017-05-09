@@ -17,19 +17,18 @@ if __name__ == '__main__':
     dirname = sys.argv[1]
     batches = (x for x in os.listdir(dirname) if '_batch' in x)
     output_folder = 'cifar10-extracted'
-    abspath = {}
+    caffe_data_folder = '/opt/caffe/data/'
     txtfiles = {}
 
     for i in ['train', 'val']:
         os.makedirs(os.path.join(output_folder, i), exist_ok=True)
-        abspath[i] = os.path.join(os.getcwd(), output_folder, i)
         txtfiles[i] = open(os.path.join(output_folder, i + '.txt'), 'w')
 
     for batch in batches:
         datadict = unpickle(os.path.join(dirname, batch))
         print("processing", datadict['batch_label'])
 
-        ds = 'val' if 'val' in datadict['batch_label'] else 'train'
+        ds = 'val' if 'test' in datadict['batch_label'] else 'train'
 
         X = datadict["data"]
         Y = datadict['labels']
@@ -41,9 +40,8 @@ if __name__ == '__main__':
         for i in range(X.shape[0]):
             im = Image.fromarray(X[i])
             im.save(os.path.join(output_folder, ds, filenames[i]))
+            image_line = "{} {}\n".format(filenames[i], Y[i])
+            txtfiles[ds].write(image_line)
 
             if i % 1000 == 0:
                 print("\tSaved {} images".format(i))
-
-        filenames = list(map(lambda x: abspath[ds] + x + '\n', filenames))
-        txtfiles[ds].writelines(filenames)
